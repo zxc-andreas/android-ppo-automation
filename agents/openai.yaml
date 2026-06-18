@@ -1,0 +1,4 @@
+interface:
+  display_name: "Android PPO Automation"
+  short_description: "Generate Android Figma asset variants."
+  default_prompt: "Use $android-ppo-automation to copy Apple Version assets into Android Version."
