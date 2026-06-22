@@ -1,11 +1,11 @@
 ---
 name: android-ppo-automation
-description: Automate Android PPO marketing asset variants in Figma from Apple Version frames. Use when the user asks to copy Apple Version assets into Android Version, generate 512 icons, generate 360x640 phone frames, generate 840x1024 or 900x1280 pad frames, copy backgrounds/titles/mockups, or repeat the Android ppo variant workflow.
+description: Automate Android PPO marketing asset variants in Figma from Apple Version frames. Use when the user asks to copy Apple Version assets into Android Version, generate 512 icons, generate 360x640 phone frames, generate 840x1024 or 900x1280 pad frames, copy backgrounds/titles/mockups, map source mockup screen content into Android mockups, replace Apple/iOS status bars with Android status bars, or repeat the Android ppo variant workflow.
 ---
 
 # Android PPO Automation
 
-Use this skill for the Figma workflow that starts with copying the `Apple Version` icon into `Android Version` as a new `512x512` copy, then generates Android phone and pad variant frames from the Apple source frames.
+Use this skill for the Figma workflow that starts with copying the `Apple Version` icon into `Android Version` as a new `512x512` copy, then generates Android phone and pad variant frames from the Apple source frames, maps readable source mockup screen content into Android mockups, and replaces Apple status bars with Android status bars.
 
 This skill depends on Figma write operations, so always load and follow `figma-use` before every `use_figma` call.
 
@@ -29,10 +29,10 @@ At a high level:
 1. Restore or preserve the original `Apple Version` assets.
 2. Copy `Icon` into `Android Version` as a separate `512x512` icon.
 3. Generate phone frames from `430x932` sources: `360_01..360_08`.
-4. Copy phone backgrounds, titles, selected mockups, and second-page foreground content.
+4. Copy phone backgrounds, titles, selected mockups, second-page foreground content, readable mockup screen pages, and Android status bars.
 5. Generate pad frames from `1024x1366` sources: `840_01..840_08` and `900_01..900_08`.
-6. Copy pad backgrounds, titles, `Android pad Black` mockups, and second-page foreground content.
-7. Verify counts, dimensions, child counts, text presence, and integer mockup widths.
+6. Copy pad backgrounds, titles, `Android pad Black` mockups, second-page foreground content, readable mockup screen pages, and Android status bars.
+7. Verify counts, dimensions, child counts, text presence, status-bar replacement, screen-content wrappers, and integer mockup widths.
 
 ## Figma Rules
 
@@ -46,4 +46,6 @@ At a high level:
 - If a source page contains an irregular, angled, distorted, or unusually cropped mockup, stop before that mockup step and ask the user whether to copy it or skip it.
 - If a source page has no mockup and appears to be a pure text page or image-only page, stop before inventing a device treatment and ask the user how to handle that page.
 - If the device template section contains both black and white mockup variants, ask the user which color to use before copying mockups, unless the user has already specified the color in the current request.
+- Use `Android Status Bars Black` or `Android Status Bars White` from `Android phone and pad` when replacing Apple status bars. If both are present and the user has not specified a color, ask which status-bar color to use.
+- For rotated pad mockup `Paste Here` containers, align screen content and Android status bars using absolute bounds relative to the target frame instead of appending them directly into the rotated container.
 - Always return `createdNodeIds` and `mutatedNodeIds` from write scripts.

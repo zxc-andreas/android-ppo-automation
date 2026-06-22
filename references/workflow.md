@@ -32,12 +32,16 @@ Use shared plugin data on generated nodes:
 - `background-from-430`
 - `title-from-430`
 - `phone-black-mockup`
+- `phone-screen-content-from-6.7`
+- `android-status-bar-360`
 - `foreground-from-430`
 - `pad-empty-840`
 - `pad-empty-900`
 - `pad-background-from-1024`
 - `pad-title-from-1024`
 - `pad-black-mockup`
+- `pad-screen-content-from-1024`
+- `android-status-bar-pad`
 - `pad-foreground-from-1024`
 
 Before rerunning a step, remove only generated nodes with the matching tag. Do not remove user-created nodes or original source nodes.
@@ -141,7 +145,62 @@ Rules:
 
 Known final working phone width used in this workflow: `270`.
 
-## 6. Copy Phone Second-Page Foreground
+## 6. Map Phone Mockup Screen Content
+
+After regular `Phone Black` mockups exist in the `360_*` targets, copy readable screen-page content from each source `6.7_*` mockup into the matching target mockup.
+
+Source detection:
+
+- Find a nested frame named `2-SCREEN` inside the source `6.7_*` mockup.
+- Copy the visible child page frame inside `2-SCREEN` such as `today`, `explore - Glp recipes`, `Recipes Detail`, or `chat`.
+- If no `2-SCREEN` exists, skip that page and report it. Do not invent content.
+- Known skips in the original workflow: `6.7_01` and `6.7_02`.
+
+Target detection:
+
+- In each `360_*`, find the `Phone Black` mockup and its nested `Paste Here` frame.
+- Place generated content inside `Paste Here`, below the camera/island overlay when present.
+- Set `Paste Here.clipsContent = true`.
+
+Position and scale:
+
+- Create a wrapper named `screen/6.7_XX -> 360_XX`.
+- Use shared plugin data tag `phone-screen-content-from-6.7`.
+- Scale the copied content proportionally to fit the `Paste Here` screen area.
+- A working approach is `scale = max(PasteHere.width / sourceScreen.width, PasteHere.height / sourceScreen.height)`, with `wrapper.x` centered and `wrapper.y = 0`.
+- Keep any generated Android status bar above this content layer.
+
+## 7. Replace Phone Status Bars
+
+Replace Apple/iOS status bars inside 360 phone mockups with Android status bars from `Android phone and pad`.
+
+Template:
+
+- Prefer `Android Status Bars Black` for black phone mockups.
+- Use `Android Status Bars White` only if the user selects a white/light status-bar treatment.
+- If both black and white status bar templates exist and the user has not specified one, ask which to use.
+
+Target:
+
+- For each `360_*`, find the nested `Paste Here` frame.
+- Clone the selected Android status-bar template into `Paste Here`.
+- Name it `Android Status Bar / 360_XX`.
+- Tag with `android-status-bar-360`.
+- Scale to `PasteHere.width / template.width`, then set `x = 0`, `y = 0`.
+- Insert it above generated screen content and below only hardware overlays such as camera/island if needed.
+
+Cleanup:
+
+- Remove only prior generated nodes tagged `android-status-bar-360` before rerunning.
+- Hide visible Apple/iOS nodes named `Status Bar` inside `Paste Here` descendants by setting `visible = false`.
+- Do not delete source status bars.
+
+Known behavior:
+
+- `360_01` may have no `Paste Here` because its mockup is irregular; skip and report.
+- `360_02` may have a `Paste Here` but no copied screen content; still place the Android status bar if the target exists.
+
+## 8. Copy Phone Second-Page Foreground
 
 For `360_02`, also copy non-mockup foreground content from `6.7_02`, such as:
 
@@ -152,7 +211,7 @@ Do not edit individual text font sizes if fonts are unavailable. Copy the groups
 
 Tag as `foreground-from-430`.
 
-## 7. Generate Pad Frames
+## 9. Generate Pad Frames
 
 Source frames: `Apple Version` direct children with rounded size `1024x1366`, usually `ipad_01..ipad_08`.
 
@@ -171,7 +230,7 @@ Create empty frames first:
 
 Place them in a clear area. In the original workflow, `840_*` were placed around local y `3293` and `900_*` around local y `4359`, but adapt if those positions are occupied.
 
-## 8. Copy Pad Backgrounds
+## 10. Copy Pad Backgrounds
 
 For each `ipad_*`, copy background-like direct children into both matching pad targets.
 
@@ -189,7 +248,7 @@ Ratios:
 
 Set `x/y` with separate ratios and use a uniform width-based scale for copied layers unless the user asks for a different fit.
 
-## 9. Copy Pad Titles
+## 11. Copy Pad Titles
 
 Copy title layers from each `ipad_*` into both target sets.
 
@@ -204,7 +263,7 @@ Position and scale:
 - Use `titleScale = min(xRatio, yRatio)` unless the user asks for a fixed percentage.
 - Tag as `pad-title-from-1024`.
 
-## 10. Copy Pad Mockups
+## 12. Copy Pad Mockups
 
 Template: use the pad mockup color chosen by the user from `Android phone and pad`, such as `Android pad Black` or `Android pad White`.
 
@@ -235,7 +294,81 @@ Known final working sizes in this workflow:
 - `840_*`: pad mockup width `643`
 - `900_*`: pad mockup width `715`
 
-## 11. Copy Pad Second-Page Foreground
+## 13. Map Pad Mockup Screen Content
+
+After `Android pad Black` mockups exist in `840_*` and `900_*`, copy readable source iPad mockup page content from the `1024x1366` source frames into the target pad mockup screen areas.
+
+Source detection:
+
+- Use `Apple Version` direct children sized `1024x1366`, usually `ipad_01..ipad_08`.
+- In each source, look for `Frame 2147228900`.
+- Inside it, find the nested frame named `image`.
+- Copy visible children of `image` that represent app page content.
+- Exclude Apple/system-only layers named `Content`, `Status Bar`, `Home Indicator`, and hardware shell layers such as `iPad Pro 11 - Space Gray - Landscape 1`.
+- If no readable `Frame 2147228900 > image` exists, skip and report. Known skips in the original workflow: `ipad_01` and `ipad_02`.
+
+Target detection:
+
+- For each source `ipad_XX`, map to both `840_XX` and `900_XX`.
+- Find the corresponding target `Android pad Black` mockup and its nested `Paste Here` frame.
+- Pad `Paste Here` frames may be rotated by `90` degrees. Do not append app screen content directly into the rotated `Paste Here` if it would rotate the copied page.
+- Instead, create an unrotated overlay wrapper directly under the target `840_*` or `900_*` frame and align it to `Paste Here.absoluteBoundingBox`.
+
+Position and scale:
+
+- Create a wrapper named `screen/ipad_XX -> 840_XX` or `screen/ipad_XX -> 900_XX`.
+- Tag it with `pad-screen-content-from-1024`.
+- Set wrapper size to the target `Paste Here.absoluteBoundingBox.width/height`.
+- Set wrapper local position to:
+  - `wrapper.x = PasteHere.absoluteBoundingBox.x - targetFrame.absoluteBoundingBox.x`
+  - `wrapper.y = PasteHere.absoluteBoundingBox.y - targetFrame.absoluteBoundingBox.y`
+- Create an inner content frame sized to the source `image` frame.
+- Clone the selected source `image` children into the inner content frame at their original local positions.
+- Scale inner content with `max(wrapper.width / sourceImage.width, wrapper.height / sourceImage.height)`.
+- Center inner content horizontally and set `inner.y = 0`.
+- Set `wrapper.clipsContent = true`.
+- Insert the wrapper below generated Android pad status bars so status bars remain visible.
+
+Cleanup:
+
+- Remove only prior generated nodes tagged `pad-screen-content-from-1024` before rerunning.
+- Hide copied Apple/system UI nodes named `Status Bar`, `Home Indicator`, or `Content` inside the generated wrapper by setting `visible = false`.
+- Do not alter the original `ipad_*` source frames.
+
+## 14. Replace Pad Status Bars
+
+Replace Apple/iOS status bars for `840_*` and `900_*` pad mockups with Android status bars from `Android phone and pad`.
+
+Template:
+
+- Prefer `Android Status Bars Black` for `Android pad Black`.
+- Use `Android Status Bars White` only if the user selects a white/light status-bar treatment.
+- If both black and white status bar templates exist and the user has not specified one, ask which to use.
+
+Target and placement:
+
+- For each `840_*` and `900_*`, find the pad mockup `Paste Here`.
+- Because pad `Paste Here` can be rotated by `90` degrees, clone the status bar directly under the target `840_*` or `900_*` frame as an unrotated overlay.
+- Name it `Android Status Bar / 840_XX` or `Android Status Bar / 900_XX`.
+- Tag with `android-status-bar-pad`.
+- Scale by the visual screen width: `scale = PasteHere.absoluteBoundingBox.width / template.width`.
+- Set local position with absolute bounds:
+  - `clone.x = PasteHere.absoluteBoundingBox.x - targetFrame.absoluteBoundingBox.x`
+  - `clone.y = PasteHere.absoluteBoundingBox.y - targetFrame.absoluteBoundingBox.y`
+- Keep the Android status bar above generated pad screen content.
+
+Cleanup:
+
+- Remove only prior generated nodes tagged `android-status-bar-pad` before rerunning.
+- Hide visible copied Apple/iOS nodes named `Status Bar` inside generated content wrappers.
+- Do not delete source Apple status bars.
+
+Known working sizes:
+
+- `840_*`: Android status bar about `577.98 x 49.32`
+- `900_*`: Android status bar about `642.70 x 54.84`
+
+## 15. Copy Pad Second-Page Foreground
 
 For `840_02` and `900_02`, copy non-mockup foreground content from `ipad_02`:
 
@@ -251,7 +384,7 @@ Known working scales:
 
 Tag as `pad-foreground-from-1024`.
 
-## 12. Validation Checklist
+## 16. Validation Checklist
 
 After each run, verify with a read-only `use_figma` call:
 
@@ -264,13 +397,18 @@ After each run, verify with a read-only `use_figma` call:
   - Backgrounds and titles exist
   - Any irregular mockup source was handled according to the user's explicit copy/skip choice
   - `360_02` has foreground content
+  - Readable `6.7_*` screen content is copied into matching 360 mockup `Paste Here` frames where available
+  - Android status bars are present in 360 mockups with `Paste Here`, and copied Apple `Status Bar` nodes are hidden
 - Pad targets:
   - 8 frames `840_01..840_08`
   - 8 frames `900_01..900_08`
   - Each has backgrounds, titles, and `Android pad Black`
   - `840_02` and `900_02` have foreground content
+  - Readable `ipad_*` screen content is copied into matching `840_*` and `900_*` pad mockup screen areas where available
+  - Android pad status bars are present in all target pad frames with mockups
 - Mockup widths are integers.
 - Generated layers are below titles when they might overlap.
+- Generated screen content wrappers are clipped and do not cover Android status bars.
 - Any no-mockup pure text/image pages were handled according to the user's explicit choice.
 
 Return a concise user summary with counts and any deliberate skips.
