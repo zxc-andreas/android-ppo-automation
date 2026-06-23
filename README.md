@@ -14,6 +14,8 @@ This skill starts from Apple Version assets and generates Android Version output
 - Copies Android phone and pad mockups from the `Android phone and pad` section.
 - Maps readable app screen content from Apple phone and iPad mockups into Android phone and pad mockups.
 - Replaces copied Apple/iOS status bars with Android status bars from the `Android phone and pad` section.
+- Normalizes generated title geometry/typography and centers titles in `360`, `840`, and `900` outputs.
+- Normalizes generated mockup geometry and left/right/bottom distances to whole-pixel values.
 - Asks before handling irregular mockups, no-mockup text pages, image-only pages, or color choices when multiple mockup colors exist.
 
 ## Expected Figma Structure
@@ -61,5 +63,6 @@ Use $android-ppo-automation to copy Apple Version assets into Android Version.
 
 - The original Apple Version frames and icon must remain unchanged.
 - Generated nodes should be new copies under Android Version.
+- Generated title and mockup positions should be whole-pixel values after the workflow finishes.
 - The skill depends on Figma write operations, so Codex must follow `figma-use` before each `use_figma` call.
 - The detailed workflow is in [`references/workflow.md`](references/workflow.md).

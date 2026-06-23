@@ -116,6 +116,7 @@ Position and scale:
 - Tag as `title-from-430`.
 
 Avoid editing font sizes directly when local fonts may be unavailable. Group scaling is safer.
+After all phone and pad title-copy steps are complete, run section 16 to remove decimal geometry/typography and center generated titles.
 
 ## 5. Copy Phone Mockups
 
@@ -144,6 +145,7 @@ Rules:
 - Tag as `phone-black-mockup`.
 
 Known final working phone width used in this workflow: `270`.
+After copying or resizing phone mockups, run section 17 to normalize mockup root geometry and frame-edge distances.
 
 ## 6. Map Phone Mockup Screen Content
 
@@ -263,6 +265,8 @@ Position and scale:
 - Use `titleScale = min(xRatio, yRatio)` unless the user asks for a fixed percentage.
 - Tag as `pad-title-from-1024`.
 
+After all phone and pad title-copy steps are complete, run section 16 to remove decimal geometry/typography and center generated titles.
+
 ## 12. Copy Pad Mockups
 
 Template: use the pad mockup color chosen by the user from `Android phone and pad`, such as `Android pad Black` or `Android pad White`.
@@ -293,6 +297,8 @@ Known final working sizes in this workflow:
 
 - `840_*`: pad mockup width `643`
 - `900_*`: pad mockup width `715`
+
+After copying or resizing pad mockups, run section 17 to normalize mockup root geometry and frame-edge distances.
 
 ## 13. Map Pad Mockup Screen Content
 
@@ -384,7 +390,72 @@ Known working scales:
 
 Tag as `pad-foreground-from-1024`.
 
-## 16. Validation Checklist
+## 16. Normalize Generated Titles
+
+Normalize generated title nodes after title copying and after any later operation that changes typography, size, or position.
+
+Targets:
+
+- Phone titles tagged `title-from-430` in `360_*` frames.
+- Pad titles tagged `pad-title-from-1024` in `840_*` and `900_*` frames.
+
+Integer rules:
+
+- Round title node `x`, `y`, `width`, and `height` to whole pixels.
+- Remove decimal typography values from every text segment:
+  - `fontSize`
+  - `lineHeight.value`
+  - `letterSpacing.value`
+- Use `getStyledTextSegments(["fontSize", "fontName", "lineHeight", "letterSpacing"])` on text descendants. Do not trust only whole-node `fontSize`, because mixed-font text can keep decimal values in hidden ranges.
+- When changing text geometry, use `resizeWithoutConstraints()` or `resize()` as appropriate, then set integer `x/y`.
+
+Centering rules:
+
+- Center the combined visual bounds of all generated title nodes inside each target frame.
+- Target horizontal centers:
+  - `360_*`: `180`
+  - `840_*`: `420`
+  - `900_*`: `450`
+- Keep all final title `x/y/width/height` values as integers.
+- If combined title bounds cannot center without producing `.5`, widen the rightmost title text box by `1px`, then recenter.
+- Preserve the original relative vertical placement unless the user explicitly asks for a different layout.
+
+Validation:
+
+- Confirm every generated target frame has centered titles with no decimal `x/y/width/height`.
+- Confirm no text segment in generated titles has decimal `fontSize`, `lineHeight.value`, or `letterSpacing.value`.
+
+## 17. Normalize Generated Mockups
+
+Normalize generated mockups after copying, resizing, or changing mockup screen content.
+
+Targets:
+
+- Phone mockups tagged `phone-black-mockup` in `360_*` frames.
+- Pad mockups tagged `pad-black-mockup` in `840_*` and `900_*` frames.
+- `360_01` may intentionally have no regular generated mockup when an irregular source mockup was skipped.
+
+Integer rules:
+
+- Only edit generated Android Version mockups. Do not edit original Apple Version mockups or source frames.
+- Round each mockup root node `x`, `y`, `width`, and `height` to whole pixels.
+- Use `resizeWithoutConstraints()` or `resize()` for width/height changes, then set integer `x/y`.
+- After rounding, verify frame-relative distances:
+  - `left = mockup.x`
+  - `right = frame.width - (mockup.x + mockup.width)`
+  - `bottom = frame.height - (mockup.y + mockup.height)`
+- `left`, `right`, and `bottom` must all be integers for `360_*`, `840_*`, and `900_*`.
+- Negative `bottom` is allowed when the mockup deliberately extends below the frame, but it must still be a whole number.
+- Preserve visual center as much as possible when rounding. If one side must absorb a 1px parity difference, keep the mockup visually aligned with the source-page mapping.
+
+Validation:
+
+- Count generated phone and pad mockups by tag.
+- Report skipped pages explicitly, especially irregular/no-mockup pages that the user chose to skip.
+- Confirm every generated mockup root has integer `x/y/width/height`.
+- Confirm every generated mockup has integer left, right, and bottom distances relative to its parent frame.
+
+## 18. Validation Checklist
 
 After each run, verify with a read-only `use_figma` call:
 
@@ -405,8 +476,9 @@ After each run, verify with a read-only `use_figma` call:
   - Each has backgrounds, titles, and `Android pad Black`
   - `840_02` and `900_02` have foreground content
   - Readable `ipad_*` screen content is copied into matching `840_*` and `900_*` pad mockup screen areas where available
-  - Android pad status bars are present in all target pad frames with mockups
-- Mockup widths are integers.
+- Titles in `360_*`, `840_*`, and `900_*` are horizontally centered and have no decimal geometry or typography values.
+- Mockup root `x/y/width/height` values are integers.
+- Mockup left, right, and bottom distances to parent frames are integers.
 - Generated layers are below titles when they might overlap.
 - Generated screen content wrappers are clipped and do not cover Android status bars.
 - Any no-mockup pure text/image pages were handled according to the user's explicit choice.
