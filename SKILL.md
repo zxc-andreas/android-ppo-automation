@@ -1,6 +1,6 @@
 ---
 name: android-ppo-automation
-description: Automate Android PPO marketing asset variants in Figma from Apple Version frames. Use when the user asks to copy Apple Version assets into Android Version, generate 512 icons, generate 360x640 phone frames, generate 840x1024 or 900x1280 pad frames, copy backgrounds/titles/mockups, normalize generated title integer geometry/typography, center 360/840/900 titles, normalize generated mockup integer geometry and frame-edge distances, map source mockup screen content into Android mockups, replace Apple/iOS status bars with Android status bars, or repeat the Android ppo variant workflow.
+description: Automate Android PPO marketing asset variants in Figma from Apple Version frames. Use when the user asks to copy Apple Version assets into Android Version, generate 512 icons, generate 360x640 phone frames, generate 840x1024 or 900x1280 pad frames, copy backgrounds/titles/mockups, keep pad mockup shells/screen content/status bars movable together, normalize generated title integer geometry/typography, center 360/840/900 titles, normalize generated mockup integer geometry and frame-edge distances, map source mockup screen content into Android mockups, replace Apple/iOS status bars with Android status bars, or repeat the Android ppo variant workflow.
 ---
 
 # Android PPO Automation
@@ -47,6 +47,7 @@ At a high level:
 - After copying titles, remove decimal values from generated title geometry and typography. Check every styled text segment with `getStyledTextSegments()`, not just whole-node `fontSize`, because mixed-font titles can hide decimal ranges.
 - After title typography changes, center the title group inside each generated `360_*`, `840_*`, and `900_*` frame by the combined visual title bounds. Keep local `x/y` integers and avoid `.5` centers by widening the rightmost title text box by 1px when combined title bounds have the wrong parity.
 - After copying or scaling mockups, round generated mockup root `x/y/width/height` to integers and verify frame-relative left, right, and bottom distances are integers. Negative bottom distances are allowed when the mockup deliberately extends beyond the frame, but they must still be whole numbers.
+- For `840_*` and `900_*` pad mockups, make the mockup movable as one unit. Because pad screen content and Android status bars may need unrotated overlays outside the rotated `Paste Here`, wrap or group the pad shell, generated screen content, and Android status bar together so moving the mockup moves all visible mockup parts.
 - Put mockups below title layers so titles remain visible.
 - If a source page contains an irregular, angled, distorted, or unusually cropped mockup, stop before that mockup step and ask the user whether to copy it or skip it.
 - If a source page has no mockup and appears to be a pure text page or image-only page, stop before inventing a device treatment and ask the user how to handle that page.

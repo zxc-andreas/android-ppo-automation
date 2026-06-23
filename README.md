@@ -14,6 +14,7 @@ This skill starts from Apple Version assets and generates Android Version output
 - Copies Android phone and pad mockups from the `Android phone and pad` section.
 - Maps readable app screen content from Apple phone and iPad mockups into Android phone and pad mockups.
 - Replaces copied Apple/iOS status bars with Android status bars from the `Android phone and pad` section.
+- Keeps generated pad mockup shells, screen content, and Android status bars together as movable mockup suites.
 - Normalizes generated title geometry/typography and centers titles in `360`, `840`, and `900` outputs.
 - Normalizes generated mockup geometry and left/right/bottom distances to whole-pixel values.
 - Asks before handling irregular mockups, no-mockup text pages, image-only pages, or color choices when multiple mockup colors exist.

@@ -39,6 +39,7 @@ Use shared plugin data on generated nodes:
 - `pad-empty-900`
 - `pad-background-from-1024`
 - `pad-title-from-1024`
+- `pad-mockup-suite`
 - `pad-black-mockup`
 - `pad-screen-content-from-1024`
 - `android-status-bar-pad`
@@ -292,6 +293,7 @@ Rules:
 - If it fits, keep original size.
 - If it does not fit, shrink by 10% steps and keep width integer.
 - Tag as `pad-black-mockup`.
+- Create or maintain a wrapper/group named like `pad mockup suite / 840_XX` or `pad mockup suite / 900_XX` tagged with `pad-mockup-suite`. It should contain the pad shell plus any generated screen-content and status-bar overlays once those are created, so the visible pad mockup can move together as one unit.
 
 Known final working sizes in this workflow:
 
@@ -318,7 +320,8 @@ Target detection:
 - For each source `ipad_XX`, map to both `840_XX` and `900_XX`.
 - Find the corresponding target `Android pad Black` mockup and its nested `Paste Here` frame.
 - Pad `Paste Here` frames may be rotated by `90` degrees. Do not append app screen content directly into the rotated `Paste Here` if it would rotate the copied page.
-- Instead, create an unrotated overlay wrapper directly under the target `840_*` or `900_*` frame and align it to `Paste Here.absoluteBoundingBox`.
+- Instead, create an unrotated overlay wrapper inside the matching `pad-mockup-suite` and align it to `Paste Here.absoluteBoundingBox`. If the wrapper must temporarily be created under the target frame to calculate absolute coordinates, move it into the suite afterward and preserve visual position.
+- Do not leave pad screen content as an independent frame that stays behind when the pad mockup is moved.
 
 Position and scale:
 
@@ -334,6 +337,7 @@ Position and scale:
 - Center inner content horizontally and set `inner.y = 0`.
 - Set `wrapper.clipsContent = true`.
 - Insert the wrapper below generated Android pad status bars so status bars remain visible.
+- Keep the wrapper in the matching `pad-mockup-suite` with the pad shell.
 
 Cleanup:
 
@@ -354,7 +358,7 @@ Template:
 Target and placement:
 
 - For each `840_*` and `900_*`, find the pad mockup `Paste Here`.
-- Because pad `Paste Here` can be rotated by `90` degrees, clone the status bar directly under the target `840_*` or `900_*` frame as an unrotated overlay.
+- Because pad `Paste Here` can be rotated by `90` degrees, clone the status bar as an unrotated overlay inside the matching `pad-mockup-suite`.
 - Name it `Android Status Bar / 840_XX` or `Android Status Bar / 900_XX`.
 - Tag with `android-status-bar-pad`.
 - Scale by the visual screen width: `scale = PasteHere.absoluteBoundingBox.width / template.width`.
@@ -362,6 +366,7 @@ Target and placement:
   - `clone.x = PasteHere.absoluteBoundingBox.x - targetFrame.absoluteBoundingBox.x`
   - `clone.y = PasteHere.absoluteBoundingBox.y - targetFrame.absoluteBoundingBox.y`
 - Keep the Android status bar above generated pad screen content.
+- Do not leave the status bar outside the suite. Moving the pad mockup suite must move the shell, generated screen content, and Android status bar together.
 
 Cleanup:
 
@@ -433,6 +438,7 @@ Targets:
 
 - Phone mockups tagged `phone-black-mockup` in `360_*` frames.
 - Pad mockups tagged `pad-black-mockup` in `840_*` and `900_*` frames.
+- Pad mockup suites tagged `pad-mockup-suite` in `840_*` and `900_*` frames.
 - `360_01` may intentionally have no regular generated mockup when an irregular source mockup was skipped.
 
 Integer rules:
@@ -440,13 +446,15 @@ Integer rules:
 - Only edit generated Android Version mockups. Do not edit original Apple Version mockups or source frames.
 - Round each mockup root node `x`, `y`, `width`, and `height` to whole pixels.
 - Use `resizeWithoutConstraints()` or `resize()` for width/height changes, then set integer `x/y`.
+- For `360_*` phone mockups, preserving the mapped visual center while rounding is acceptable.
+- For `840_*` and `900_*` pad mockups, integer-fix the `pad-mockup-suite` as the movable unit. Do not move only the pad shell or only the unrotated screen/status overlays.
 - After rounding, verify frame-relative distances:
   - `left = mockup.x`
   - `right = frame.width - (mockup.x + mockup.width)`
   - `bottom = frame.height - (mockup.y + mockup.height)`
 - `left`, `right`, and `bottom` must all be integers for `360_*`, `840_*`, and `900_*`.
 - Negative `bottom` is allowed when the mockup deliberately extends below the frame, but it must still be a whole number.
-- Preserve visual center as much as possible when rounding. If one side must absorb a 1px parity difference, keep the mockup visually aligned with the source-page mapping.
+- Preserve visual alignment with the source-page mapping. For pad targets, if a mockup needs to be moved after creation, move the suite so the shell, screen content, and status bar remain locked together.
 
 Validation:
 
@@ -454,6 +462,7 @@ Validation:
 - Report skipped pages explicitly, especially irregular/no-mockup pages that the user chose to skip.
 - Confirm every generated mockup root has integer `x/y/width/height`.
 - Confirm every generated mockup has integer left, right, and bottom distances relative to its parent frame.
+- Confirm every pad shell, generated pad screen-content wrapper, and generated pad Android status bar belongs to the matching `pad-mockup-suite` or moves with it.
 
 ## 18. Validation Checklist
 
