@@ -48,6 +48,7 @@ At a high level:
 - After title typography changes, center the title group inside each generated `360_*`, `840_*`, and `900_*` frame by the combined visual title bounds. Keep local `x/y` integers and avoid `.5` centers by widening the rightmost title text box by 1px when combined title bounds have the wrong parity.
 - After copying or scaling mockups, round generated mockup root `x/y/width/height` to integers and verify frame-relative left, right, and bottom distances are integers. Negative bottom distances are allowed when the mockup deliberately extends beyond the frame, but they must still be whole numbers.
 - For `840_*` and `900_*` pad mockups, put generated screen content and Android status bars inside the `pad-black-mockup` frame. Do not leave them as siblings of the target `840_*` or `900_*` frame; moving the mockup frame must move the shell, UI page, and status bar together.
+- After copying pad screen content, check copied routine item text containers. If a `content` frame under a `Routine item` contains visible text but was copied as `visible = false`, set that `content` frame visible so routine titles/descriptions are not hidden.
 - Put mockups below title layers so titles remain visible.
 - If a source page contains an irregular, angled, distorted, or unusually cropped mockup, stop before that mockup step and ask the user whether to copy it or skip it.
 - If a source page has no mockup and appears to be a pure text page or image-only page, stop before inventing a device treatment and ask the user how to handle that page.

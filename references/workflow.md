@@ -342,6 +342,7 @@ Cleanup:
 
 - Remove only prior generated nodes tagged `pad-screen-content-from-1024` before rerunning.
 - Hide copied Apple/system UI nodes named `Status Bar`, `Home Indicator`, or `Content` inside the generated wrapper by setting `visible = false`.
+- Do not hide app-content frames named `content` when they are inside a `Routine item` and contain text nodes such as task titles/descriptions. These frames may be copied from the source as `visible = false`; set them visible in generated pad screens so the routine item copy appears.
 - Do not alter the original `ipad_*` source frames.
 
 ## 14. Replace Pad Status Bars
@@ -461,6 +462,7 @@ Validation:
 - Confirm every generated mockup root has integer `x/y/width/height`.
 - Confirm every generated mockup has integer left, right, and bottom distances relative to its parent frame.
 - Confirm every generated pad screen-content wrapper and generated pad Android status bar is parented inside the matching `pad-black-mockup` frame.
+- Confirm copied routine item `content` frames in generated pad screens are visible when they contain task title/description text.
 
 ## 18. Validation Checklist
 
