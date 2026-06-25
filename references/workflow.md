@@ -40,7 +40,6 @@ Use shared plugin data on generated nodes:
 - `pad-background-from-1024`
 - `pad-title-from-1024`
 - `pad-black-mockup`
-- `pad-screen-content-from-1024`
 - `android-status-bar-pad`
 - `pad-foreground-from-1024`
 
@@ -292,7 +291,7 @@ Rules:
 - If it fits, keep original size.
 - If it does not fit, shrink by 10% steps and keep width integer.
 - Tag as `pad-black-mockup`.
-- The generated screen-content wrapper and Android status bar for this target must later be parented inside this `pad-black-mockup` frame, not left as siblings under the target `840_*` or `900_*` frame.
+- The generated Android status bar for this target must later be parented inside this `pad-black-mockup` frame, not left as a sibling under the target `840_*` or `900_*` frame.
 
 Known final working sizes in this workflow:
 
@@ -301,49 +300,17 @@ Known final working sizes in this workflow:
 
 After copying or resizing pad mockups, run section 17 to normalize mockup root geometry and frame-edge distances.
 
-## 13. Map Pad Mockup Screen Content
+## 13. Do Not Map Pad Mockup Screen Content
 
-After `Android pad Black` mockups exist in `840_*` and `900_*`, copy readable source iPad mockup page content from the `1024x1366` source frames into the target pad mockup screen areas.
+Do not copy source iPad UI pages into generated `840_*` or `900_*` pad mockups.
 
-Source detection:
+Rules:
 
-- Use `Apple Version` direct children sized `1024x1366`, usually `ipad_01..ipad_08`.
-- In each source, look for `Frame 2147228900`.
-- Inside it, find the nested frame named `image`.
-- Copy visible children of `image` that represent app page content.
-- Exclude Apple/system-only layers named `Content`, `Status Bar`, `Home Indicator`, and hardware shell layers such as `iPad Pro 11 - Space Gray - Landscape 1`.
-- If no readable `Frame 2147228900 > image` exists, skip and report. Known skips in the original workflow: `ipad_01` and `ipad_02`.
-
-Target detection:
-
-- For each source `ipad_XX`, map to both `840_XX` and `900_XX`.
-- Find the corresponding target `Android pad Black` mockup and its nested `Paste Here` frame.
-- Pad `Paste Here` frames may be rotated by `90` degrees. Do not append app screen content directly into the rotated `Paste Here` if it would rotate the copied page.
-- Instead, create an unrotated overlay wrapper inside the matching `pad-black-mockup` frame and align it to `Paste Here.absoluteBoundingBox`. If the wrapper must temporarily be created under the target frame to calculate absolute coordinates, move it into the mockup frame afterward and preserve visual position.
-- Do not leave pad screen content as an independent frame that stays behind when the pad mockup is moved.
-
-Position and scale:
-
-- Create a wrapper named `screen/ipad_XX -> 840_XX` or `screen/ipad_XX -> 900_XX`.
-- Tag it with `pad-screen-content-from-1024`.
-- Set wrapper size to the target `Paste Here.absoluteBoundingBox.width/height`.
-- Set wrapper local position to:
-  - `wrapper.x = PasteHere.absoluteBoundingBox.x - targetFrame.absoluteBoundingBox.x`
-  - `wrapper.y = PasteHere.absoluteBoundingBox.y - targetFrame.absoluteBoundingBox.y`
-- Create an inner content frame sized to the source `image` frame.
-- Clone the selected source `image` children into the inner content frame at their original local positions.
-- Scale inner content with `max(wrapper.width / sourceImage.width, wrapper.height / sourceImage.height)`.
-- Center inner content horizontally and set `inner.y = 0`.
-- Set `wrapper.clipsContent = true`.
-- Insert the wrapper below generated Android pad status bars so status bars remain visible.
-- Keep the wrapper in the matching `pad-black-mockup` frame with the pad shell.
-
-Cleanup:
-
-- Remove only prior generated nodes tagged `pad-screen-content-from-1024` before rerunning.
-- Hide copied Apple/system UI nodes named `Status Bar`, `Home Indicator`, or `Content` inside the generated wrapper by setting `visible = false`.
-- Do not hide app-content frames named `content` when they are inside a `Routine item` and contain text nodes such as task titles/descriptions. These frames may be copied from the source as `visible = false`; set them visible in generated pad screens so the routine item copy appears.
-- Do not alter the original `ipad_*` source frames.
+- Do not create new `screen/ipad_XX -> 840_XX` or `screen/ipad_XX -> 900_XX` wrappers.
+- Do not tag new nodes as `pad-screen-content-from-1024`.
+- Do not copy `Frame 2147228900 > image` content from `ipad_*` sources into pad mockup `Paste Here` areas.
+- Do not delete or modify existing copied pad UI pages if the Figma file already has them from a previous run. Leave already-copied content unchanged unless the user explicitly asks to remove, regenerate, or update it.
+- Continue with pad Android status-bar replacement in section 14.
 
 ## 14. Replace Pad Status Bars
 
@@ -365,8 +332,8 @@ Target and placement:
 - Set local position with absolute bounds:
   - `clone.x = PasteHere.absoluteBoundingBox.x - targetFrame.absoluteBoundingBox.x`
   - `clone.y = PasteHere.absoluteBoundingBox.y - targetFrame.absoluteBoundingBox.y`
-- Keep the Android status bar above generated pad screen content.
-- Do not leave the status bar outside the mockup frame. Moving the `pad-black-mockup` frame must move the shell, generated screen content, and Android status bar together.
+- Keep the Android status bar above the pad shell/screen area.
+- Do not leave the status bar outside the mockup frame. Moving the `pad-black-mockup` frame must move the shell and Android status bar together.
 
 Cleanup:
 
@@ -432,7 +399,7 @@ Validation:
 
 ## 17. Normalize Generated Mockups
 
-Normalize generated mockups after copying, resizing, or changing mockup screen content.
+Normalize generated mockups after copying, resizing, or changing mockups/status bars.
 
 Targets:
 
@@ -446,14 +413,14 @@ Integer rules:
 - Round each mockup root node `x`, `y`, `width`, and `height` to whole pixels.
 - Use `resizeWithoutConstraints()` or `resize()` for width/height changes, then set integer `x/y`.
 - For `360_*` phone mockups, preserving the mapped visual center while rounding is acceptable.
-- For `840_*` and `900_*` pad mockups, integer-fix the `pad-black-mockup` frame as the movable unit. The generated screen-content wrapper and Android status bar should already be inside that frame, so they move with it.
+- For `840_*` and `900_*` pad mockups, integer-fix the `pad-black-mockup` frame as the movable unit. The generated Android status bar should already be inside that frame, so it moves with the shell.
 - After rounding, verify frame-relative distances:
   - `left = mockup.x`
   - `right = frame.width - (mockup.x + mockup.width)`
   - `bottom = frame.height - (mockup.y + mockup.height)`
 - `left`, `right`, and `bottom` must all be integers for `360_*`, `840_*`, and `900_*`.
 - Negative `bottom` is allowed when the mockup deliberately extends below the frame, but it must still be a whole number.
-- Preserve visual alignment with the source-page mapping. For pad targets, if a mockup needs to be moved after creation, move the `pad-black-mockup` frame so the shell, screen content, and status bar remain locked together.
+- Preserve visual alignment with the source-page mapping. For pad targets, if a mockup needs to be moved after creation, move the `pad-black-mockup` frame so the shell and status bar remain locked together.
 
 Validation:
 
@@ -461,8 +428,8 @@ Validation:
 - Report skipped pages explicitly, especially irregular/no-mockup pages that the user chose to skip.
 - Confirm every generated mockup root has integer `x/y/width/height`.
 - Confirm every generated mockup has integer left, right, and bottom distances relative to its parent frame.
-- Confirm every generated pad screen-content wrapper and generated pad Android status bar is parented inside the matching `pad-black-mockup` frame.
-- Confirm copied routine item `content` frames in generated pad screens are visible when they contain task title/description text.
+- Confirm every generated pad Android status bar is parented inside the matching `pad-black-mockup` frame.
+- Confirm no new `pad-screen-content-from-1024` nodes or `screen/ipad_XX -> 840_XX` / `screen/ipad_XX -> 900_XX` wrappers were created during the current run.
 
 ## 18. Validation Checklist
 
@@ -484,12 +451,13 @@ After each run, verify with a read-only `use_figma` call:
   - 8 frames `900_01..900_08`
   - Each has backgrounds, titles, and `Android pad Black`
   - `840_02` and `900_02` have foreground content
-  - Readable `ipad_*` screen content is copied into matching `840_*` and `900_*` pad mockup screen areas where available
+  - No new source iPad UI pages were copied into `840_*` or `900_*` pad mockups
+  - Android pad status bars are present where pad mockups exist
 - Titles in `360_*`, `840_*`, and `900_*` are horizontally centered and have no decimal geometry or typography values.
 - Mockup root `x/y/width/height` values are integers.
 - Mockup left, right, and bottom distances to parent frames are integers.
 - Generated layers are below titles when they might overlap.
-- Generated screen content wrappers are clipped and do not cover Android status bars.
+- Generated phone screen content wrappers are clipped and do not cover Android status bars.
 - Any no-mockup pure text/image pages were handled according to the user's explicit choice.
 
 Return a concise user summary with counts and any deliberate skips.

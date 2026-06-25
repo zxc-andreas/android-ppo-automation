@@ -2,7 +2,7 @@
 
 Codex skill for automating Android PPO marketing asset variants in Figma.
 
-This skill starts from Apple Version assets and generates Android Version outputs, including a 512x512 icon copy, phone screenshot frames, pad screenshot frames, copied backgrounds, scaled titles, selected Android mockups, mapped in-mockup screen content, and Android status bars.
+This skill starts from Apple Version assets and generates Android Version outputs, including a 512x512 icon copy, phone screenshot frames, pad screenshot frames, copied backgrounds, scaled titles, selected Android mockups, mapped phone mockup screen content, and Android status bars.
 
 ## What It Does
 
@@ -12,10 +12,10 @@ This skill starts from Apple Version assets and generates Android Version output
 - Copies matching backgrounds into each generated frame.
 - Copies titles at 70% scale while preserving source placement.
 - Copies Android phone and pad mockups from the `Android phone and pad` section.
-- Maps readable app screen content from Apple phone and iPad mockups into Android phone and pad mockups.
+- Maps readable app screen content from Apple phone mockups into Android phone mockups.
 - Replaces copied Apple/iOS status bars with Android status bars from the `Android phone and pad` section.
-- Places generated pad screen content and Android status bars inside the matching pad mockup frames.
-- Keeps copied routine item title/description text visible in generated pad screen content.
+- Skips copying source iPad UI pages into generated `840x1024` and `900x1280` pad mockups.
+- Places generated pad Android status bars inside the matching pad mockup frames.
 - Normalizes generated title geometry/typography and centers titles in `360`, `840`, and `900` outputs.
 - Normalizes generated mockup geometry and left/right/bottom distances to whole-pixel values.
 - Asks before handling irregular mockups, no-mockup text pages, image-only pages, or color choices when multiple mockup colors exist.

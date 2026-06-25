@@ -1,11 +1,11 @@
 ---
 name: android-ppo-automation
-description: Automate Android PPO marketing asset variants in Figma from Apple Version frames. Use when the user asks to copy Apple Version assets into Android Version, generate 512 icons, generate 360x640 phone frames, generate 840x1024 or 900x1280 pad frames, copy backgrounds/titles/mockups, place pad mockup screen content and status bars inside the mockup frame, normalize generated title integer geometry/typography, center 360/840/900 titles, normalize generated mockup integer geometry and frame-edge distances, map source mockup screen content into Android mockups, replace Apple/iOS status bars with Android status bars, or repeat the Android ppo variant workflow.
+description: Automate Android PPO marketing asset variants in Figma from Apple Version frames. Use when the user asks to copy Apple Version assets into Android Version, generate 512 icons, generate 360x640 phone frames, generate 840x1024 or 900x1280 pad frames, copy backgrounds/titles/mockups, map source 6.7 phone mockup screen content into 360 mockups, skip copying source iPad UI pages into 840/900 pad mockups, normalize generated title integer geometry/typography, center 360/840/900 titles, normalize generated mockup integer geometry and frame-edge distances, replace Apple/iOS status bars with Android status bars, or repeat the Android ppo variant workflow.
 ---
 
 # Android PPO Automation
 
-Use this skill for the Figma workflow that starts with copying the `Apple Version` icon into `Android Version` as a new `512x512` copy, then generates Android phone and pad variant frames from the Apple source frames, normalizes generated titles and mockups, maps readable source mockup screen content into Android mockups, and replaces Apple status bars with Android status bars.
+Use this skill for the Figma workflow that starts with copying the `Apple Version` icon into `Android Version` as a new `512x512` copy, then generates Android phone and pad variant frames from the Apple source frames, normalizes generated titles and mockups, maps readable `6.7` phone source screen content into `360` mockups, and replaces Apple status bars with Android status bars. Do not copy source iPad UI pages into `840_*` or `900_*` pad mockups.
 
 This skill depends on Figma write operations, so always load and follow `figma-use` before every `use_figma` call.
 
@@ -29,12 +29,12 @@ At a high level:
 1. Restore or preserve the original `Apple Version` assets.
 2. Copy `Icon` into `Android Version` as a separate `512x512` icon.
 3. Generate phone frames from `430x932` sources: `360_01..360_08`.
-4. Copy phone backgrounds, titles, selected mockups, second-page foreground content, readable mockup screen pages, and Android status bars.
+4. Copy phone backgrounds, titles, selected mockups, second-page foreground content, readable `6.7` mockup screen pages, and Android status bars.
 5. Generate pad frames from `1024x1366` sources: `840_01..840_08` and `900_01..900_08`.
-6. Copy pad backgrounds, titles, `Android pad Black` mockups, second-page foreground content, readable mockup screen pages, and Android status bars.
+6. Copy pad backgrounds, titles, `Android pad Black` mockups, second-page foreground content, and Android status bars. Do not copy source iPad UI pages into the `840_*` or `900_*` mockups.
 7. Normalize generated title coordinates, dimensions, and typography so Figma does not show decimal values; center `360_*`, `840_*`, and `900_*` titles horizontally after typography changes.
 8. Normalize generated mockup root geometry and frame-relative left, right, and bottom distances so Figma does not show decimal values.
-9. Verify counts, dimensions, child counts, text presence, status-bar replacement, screen-content wrappers, integer title values, centered generated titles, and integer mockup geometry/distances.
+9. Verify counts, dimensions, child counts, text presence, status-bar replacement, phone screen-content wrappers, integer title values, centered generated titles, and integer mockup geometry/distances.
 
 ## Figma Rules
 
@@ -47,12 +47,12 @@ At a high level:
 - After copying titles, remove decimal values from generated title geometry and typography. Check every styled text segment with `getStyledTextSegments()`, not just whole-node `fontSize`, because mixed-font titles can hide decimal ranges.
 - After title typography changes, center the title group inside each generated `360_*`, `840_*`, and `900_*` frame by the combined visual title bounds. Keep local `x/y` integers and avoid `.5` centers by widening the rightmost title text box by 1px when combined title bounds have the wrong parity.
 - After copying or scaling mockups, round generated mockup root `x/y/width/height` to integers and verify frame-relative left, right, and bottom distances are integers. Negative bottom distances are allowed when the mockup deliberately extends beyond the frame, but they must still be whole numbers.
-- For `840_*` and `900_*` pad mockups, put generated screen content and Android status bars inside the `pad-black-mockup` frame. Do not leave them as siblings of the target `840_*` or `900_*` frame; moving the mockup frame must move the shell, UI page, and status bar together.
-- After copying pad screen content, check copied routine item text containers. If a `content` frame under a `Routine item` contains visible text but was copied as `visible = false`, set that `content` frame visible so routine titles/descriptions are not hidden.
+- Do not copy source iPad UI pages into generated `840_*` or `900_*` pad mockups. Existing files may already contain copied pad UI pages; leave those untouched unless the user explicitly asks to remove or update them.
+- For `840_*` and `900_*` pad mockups, put generated Android status bars inside the `pad-black-mockup` frame. Do not leave status bars as siblings of the target `840_*` or `900_*` frame; moving the mockup frame must move the shell and status bar together.
 - Put mockups below title layers so titles remain visible.
 - If a source page contains an irregular, angled, distorted, or unusually cropped mockup, stop before that mockup step and ask the user whether to copy it or skip it.
 - If a source page has no mockup and appears to be a pure text page or image-only page, stop before inventing a device treatment and ask the user how to handle that page.
 - If the device template section contains both black and white mockup variants, ask the user which color to use before copying mockups, unless the user has already specified the color in the current request.
 - Use `Android Status Bars Black` or `Android Status Bars White` from `Android phone and pad` when replacing Apple status bars. If both are present and the user has not specified a color, ask which status-bar color to use.
-- For rotated pad mockup `Paste Here` containers, align screen content and Android status bars using absolute bounds relative to the target frame instead of appending them directly into the rotated container.
+- For rotated pad mockup `Paste Here` containers, align Android status bars using absolute bounds and parent them inside the generated pad mockup frame, not the rotated `Paste Here`.
 - Always return `createdNodeIds` and `mutatedNodeIds` from write scripts.
